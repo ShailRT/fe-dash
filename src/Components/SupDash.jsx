@@ -189,7 +189,7 @@ const SupDashboard = () => {
                     >
                       <option value="">Select team member...</option>
                       {employees.map((employee, index) => (
-                        <option key={index} value={employee.id}>
+                        employee.user_type === "employee" && <option key={index} value={employee.id}>
                           {employee.username}
                         </option>
                       ))}
