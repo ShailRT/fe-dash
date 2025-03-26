@@ -17,7 +17,7 @@ const Dashboard = () => {
       console.log("user", user);
     }
     
-    fetch(`http://127.0.0.1:8000/apis/employee-todos/${id}/`)
+    fetch(`http://3.109.152.120:8000/apis/employee-todos/${id}/`)
       .then((response) => response.json())
       .then((data) => setTodos(data))
       .catch((error) => console.error("Error fetching todos:", error));
@@ -102,7 +102,7 @@ const Dashboard = () => {
                               ? "Pending"
                               : "Completed";
                           try{
-                            const response = await fetch(`http://localhost:8000/apis/update-todo-status/${newTodos[index].id}/`, {
+                            const response = await fetch(`http://3.109.152.120:8000/apis/update-todo-status/${newTodos[index].id}/`, {
                               method: "POST",
                               headers: {
                                 "Content-Type": "application/json",
