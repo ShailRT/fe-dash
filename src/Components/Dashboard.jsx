@@ -18,7 +18,7 @@ const Dashboard = () => {
     }
     const fetchTodos = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/apis/todos/");
+        const response = await fetch("http://3.109.152.120:8000/apis/todos/");
         const data = await response.json();
         setTodos(data);
         console.log("Todos:", data);
@@ -54,7 +54,7 @@ const Dashboard = () => {
 
   const handleCreateTodo = async (task, employee) => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/apis/create-todo/", {
+      const response = await fetch("http://3.109.152.120:8000/apis/create-todo/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -18,7 +18,7 @@ const SupDashboard = () => {
     }
     const fetchTodos = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/apis/todos/");
+        const response = await fetch("http://3.109.152.120:8000/apis/todos/");
         const data = await response.json();
         setTodos(data);
         console.log("Todos:", data);
@@ -29,7 +29,7 @@ const SupDashboard = () => {
 
     const fetchEmployees = async () => {
       try {
-        const response = await fetch("http://127.0.0.1:8000/apis/get-users/");
+        const response = await fetch("http://3.109.152.120:8000/apis/get-users/");
         const data = await response.json();
         setEmployees(data);
       } catch (error) {
@@ -52,15 +52,12 @@ const SupDashboard = () => {
 
   const handleCreateTodo = async (task, employee) => {
     try {
-      const response = await fetch("http://127.0.0.1:8000/apis/create-todo/", {
+      const response = await fetch("http://3.109.152.120:8000/apis/create-todo/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          task,
-          employee: parseInt(employee),
-        }),
+        body: JSON.stringify({ title: task, assigned_to: employee }),
       });
 
       if (!response.ok) {
