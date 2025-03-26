@@ -30,7 +30,7 @@ const Dashboard = () => {
     const fetchEmployees = async () => {
       try {
         const response = await fetch(
-          "http://127.0.0.1:8000/apis/get-employee/"
+          "http://3.109.152.120:8000/apis/get-employee/"
         );
         const data = await response.json();
         setEmployees(data);
