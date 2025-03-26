@@ -120,11 +120,12 @@ const SupDashboard = () => {
         
         <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 columns-2">
           <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-            <div className="px-4 py-5 sm:px-6">
+            <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
               <h3 className="text-lg leading-6 font-medium text-gray-900">
-                User List
+                Users
               </h3>
             </div>
+            
             <ul className="divide-y divide-gray-200">
               {employees.map((employee, index) => (
                 <li key={index} className="px-4 py-4 sm:px-6">
@@ -140,7 +141,7 @@ const SupDashboard = () => {
           <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <div className="px-4 py-5 sm:px-6">
               <h3 className="text-lg leading-6 font-medium text-gray-900">
-                Task List
+                Tasks
               </h3>
             </div>
             <div className="border-t border-gray-200">
