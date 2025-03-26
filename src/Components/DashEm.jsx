@@ -57,7 +57,7 @@ const Dashboard = () => {
                     src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg"
                     alt="User"
                   />
-                  <h2>{user.username}</h2>
+                  <h2 className="text-sm font-medium text-gray-700 flex items-center">{user.username}</h2>
                 </button>
                 {dropdownOpen && (
                   <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5">
