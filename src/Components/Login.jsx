@@ -38,7 +38,16 @@ const Login = () => {
       }
 
       login(data);
-      navigate(data.user_type === "supervisor" ? "/supdash" : `/dashboard-employee/${data.user.id}`);
+      console.log("data", data);
+      console.log("data.user.user_type", data.user.user_type);
+      if (data.user.user_type === "super") {
+        navigate("/dashboard-supervisor");
+      } else if (data.user.user_type === "manager") {
+        navigate("/dashboard"); 
+      } else {
+        navigate(`/dashboard-employee/${data.user.id}`);
+      }
+      
     } catch (err) {
       setError(err.message || "Login failed. Please try again.");
     }

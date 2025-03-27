@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { useUser } from "../context/UserContext";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +14,8 @@ const Register = () => {
   });
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { login } = useUser();
+
 
   const handleChange = (e) => {
     setFormData({
@@ -47,16 +50,17 @@ const Register = () => {
       });
 
       const data = await response.json();
+      login(data);
 
       if (!response.ok) {
         throw new Error(data.message || "Registration failed");
       }
-      if (formData.user_type === "employee") {
-        navigate(`/dashboard-employee/${data.user_id}`);
-      } else if (formData.user_type === "supervisor") {
-        navigate(`/dashboard-supervisor`);
-      }else {
-        navigate("/dashboard")
+       if (data.user.user_type === "super") {
+        navigate("/dashboard-supervisor");
+      } else if (data.user.user_type === "manager") {
+        navigate("/dashboard"); 
+      } else {
+        navigate(`/dashboard-employee/${data.user.id}`);
       }
 
     } catch (err) {
@@ -189,8 +193,9 @@ const Register = () => {
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-[#1a1c1e] border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white"
               >
+                <option value="super">Supervisor</option>
+                <option value="manager">Manager</option>
                 <option value="employee">Employee</option>
-                <option value="supervisor">Supervisor</option>
               </select>
             </div>
 

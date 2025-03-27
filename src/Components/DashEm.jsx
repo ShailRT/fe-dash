@@ -10,7 +10,7 @@ const DashEm = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate("/login");
+      navigate("/");
       return;
     }
 
@@ -64,10 +64,10 @@ const DashEm = () => {
     }
   };
 
-  // Filter todos based on active tab
+  // Filter todos based on active tab and sort in reverse order
   const filteredTodos = activeTab === "tasks" 
-    ? todos.filter(todo => todo.status === "pending")
-    : todos.filter(todo => todo.status === "completed");
+    ? [...todos].reverse() // Show all tasks in reverse order
+    : todos.filter(todo => todo.status === "completed").reverse();
 
   if (!user) {
     return null;

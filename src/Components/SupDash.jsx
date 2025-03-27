@@ -13,17 +13,13 @@ const SupDashboard = () => {
 
   useEffect(() => {
     if (!user) {
-      navigate("/login");
-    } else {
-      console.log("user", user);
+      navigate("/");
+      return;
     }
+
     const fetchTodos = async () => {
       try {
-        // Production URL
         const response = await fetch("http://3.109.152.120:8000/apis/todos/");
-        
-        // Localhost URL
-        // const response = await fetch("http://127.0.0.1:8000/apis/todos/");
         const data = await response.json();
         setTodos(data);
         console.log("Todos:", data);
@@ -34,11 +30,7 @@ const SupDashboard = () => {
 
     const fetchEmployees = async () => {
       try {
-        // Production URL
-        const response = await fetch("http://3.109.152.120:8000/apis/get-users/");
-        
-        // Localhost URL
-        // const response = await fetch("http://127.0.0.1:8000/apis/get-users/");
+        const response = await fetch("http://3.109.152.120:8000/apis/get-employee/");
         const data = await response.json();
         setEmployees(data);
       } catch (error) {
@@ -48,7 +40,7 @@ const SupDashboard = () => {
 
     fetchTodos();
     fetchEmployees();
-  }, []);
+  }, [user, navigate]);
 
   const toggleDropdown = () => {
     setDropdownOpen(!dropdownOpen);
@@ -61,7 +53,6 @@ const SupDashboard = () => {
 
   const handleCreateTodo = async (task, employee) => {
     try {
-      // Production URL/
       const response = await fetch("http://3.109.152.120:8000/apis/create-todo/", {
         method: "POST",
         headers: {
@@ -83,13 +74,15 @@ const SupDashboard = () => {
       console.log("Task created successfully:", data);
       
       // Refresh todos after creating new task
-      try {
-        const todosResponse = await fetch("http://3.109.152.120:8000/apis/todos/");
-        const todosData = await todosResponse.json();
-        setTodos(todosData);
-      } catch (error) {
-        console.error("Error refreshing todos:", error);
+      const todosResponse = await fetch("http://3.109.152.120:8000/apis/todos/");
+      if (!todosResponse.ok) {
+        throw new Error(`HTTP error! status: ${todosResponse.status}`);
       }
+      const todosData = await todosResponse.json();
+      // Filter todos for the current supervisor
+      
+      setTodos(todosData);
+      setIsModalOpen(false);
     } catch (error) {
       console.error("Error creating task:", error);
       alert("Failed to create task. Please try again.");
@@ -117,12 +110,18 @@ const SupDashboard = () => {
       // Refresh todos after updating status
       const todosResponse = await fetch("http://3.109.152.120:8000/apis/todos/");
       const todosData = await todosResponse.json();
+      // Filter todos for the current supervisor
       setTodos(todosData);
     } catch (error) {
       console.error("Error updating todo status:", error);
       alert("Failed to update task status. Please try again.");
     }
   };
+
+  // Filter todos based on active tab
+  const filteredTodos = activeTab === "tasks" 
+    ? todos // Show all tasks in the All Tasks section
+    : todos.filter(todo => todo.status === "completed");
 
   return (
     <div className="min-h-screen bg-[#1a1c1e] flex">
@@ -218,17 +217,19 @@ const SupDashboard = () => {
                 {activeTab === "members" && "Team Members"}
                 {activeTab === "completed" && "Completed Tasks"}
               </h1>
-              <p className="text-sm text-gray-400 mt-1">
-                {activeTab === "tasks" && (
-                  <div className="flex items-center space-x-4">
-                    <span>Total: {todos.length}</span>
-                    <span className="text-yellow-500">{todos.filter(todo => todo.status === "pending").length} Pending</span>
-                    <span className="text-green-500">{todos.filter(todo => todo.status === "completed").length} Completed</span>
-                  </div>
-                )}
-                {activeTab === "members" && "View and manage team members"}
-                {activeTab === "completed" && "View completed tasks"}
-              </p>
+              {activeTab === "tasks" && (
+                <div className="flex items-center space-x-4 mt-1">
+                  <span className="text-sm text-gray-400">Total: {todos.length}</span>
+                  <span className="text-sm text-yellow-500">{filteredTodos.length} Pending</span>
+                  <span className="text-sm text-green-500">{todos.length - filteredTodos.length} Completed</span>
+                </div>
+              )}
+              {activeTab === "members" && (
+                <p className="text-sm text-gray-400 mt-1">View and manage team members</p>
+              )}
+              {activeTab === "completed" && (
+                <p className="text-sm text-gray-400 mt-1">View completed tasks</p>
+              )}
             </div>
             {activeTab === "tasks" && (
               <button
@@ -248,7 +249,7 @@ const SupDashboard = () => {
               {/* Tasks Section */}
               <div className="overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {todos.map((todo, index) => (
+                  {filteredTodos.map((todo, index) => (
                     <div
                       key={index}
                       className="bg-[#24262b] rounded-lg p-4 border border-gray-800 hover:border-purple-500/50 transition-all duration-200"
@@ -397,7 +398,6 @@ const SupDashboard = () => {
                     const task = e.target.todo.value;
                     const employee = e.target.employee.value;
                     handleCreateTodo(task, employee);
-                    setIsModalOpen(false);
                     e.target.reset();
                   }}
                   className="p-6 space-y-6"

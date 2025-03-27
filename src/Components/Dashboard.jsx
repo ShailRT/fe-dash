@@ -115,6 +115,11 @@ const Dashboard = () => {
     }
   };
 
+  // Filter todos based on active tab and sort in reverse order
+  const filteredTodos = activeTab === "tasks" 
+    ? [...todos].reverse() // Show all tasks in reverse order
+    : todos.filter(todo => todo.status === "completed").reverse();
+
   return (
     <div className="min-h-screen bg-[#1a1c1e] flex">
       {/* Sidebar */}
@@ -129,8 +134,8 @@ const Dashboard = () => {
               />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">{user.username}</h2>
-              <p className="text-sm text-gray-400">{user.user_type}</p>
+              <h2 className="text-lg font-semibold text-white">{user.user.username}</h2>
+              <p className="text-sm text-gray-400">{user.user.user_type}</p>
             </div>
           </div>
           <nav className="space-y-2">
@@ -220,7 +225,7 @@ const Dashboard = () => {
               {/* Tasks Section */}
               <div className="overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {todos.map((todo, index) => (
+                  {filteredTodos.map((todo, index) => (
                     <div
                       key={index}
                       className="bg-[#24262b] rounded-lg p-4 border border-gray-800 hover:border-purple-500/50 transition-all duration-200"
@@ -269,46 +274,44 @@ const Dashboard = () => {
 
           {activeTab === "completed" && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {todos
-                .filter(todo => todo.status === "completed")
-                .map((todo, index) => (
-                  <div
-                    key={index}
-                    className="bg-[#24262b] rounded-lg p-4 border border-gray-800"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
-                          <span className="text-sm font-medium text-purple-500">
-                            {(employees.find((emp) => emp.id === todo.user_assigned_to)?.username || "?")[0].toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="text-sm text-gray-400">
-                          {employees.find((emp) => emp.id === todo.user_assigned_to)?.username || "Unassigned"}
+              {filteredTodos.map((todo, index) => (
+                <div
+                  key={index}
+                  className="bg-[#24262b] rounded-lg p-4 border border-gray-800"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+                        <span className="text-sm font-medium text-purple-500">
+                          {(employees.find((emp) => emp.id === todo.user_assigned_to)?.username || "?")[0].toUpperCase()}
                         </span>
                       </div>
-                      <div className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
-                        Completed
-                      </div>
-                    </div>
-                    <p className="text-white text-sm line-clamp-2 mb-3">
-                      {todo.task}
-                    </p>
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-700">
-                      <span className="text-xs text-gray-500">
-                        {new Date().toLocaleDateString()}
+                      <span className="text-sm text-gray-400">
+                        {employees.find((emp) => emp.id === todo.user_assigned_to)?.username || "Unassigned"}
                       </span>
-                      <button
-                        onClick={() => {
-                          handleUpdateTodoStatus(todo.id, "pending");
-                        }}
-                        className="text-xs font-medium text-purple-500 hover:text-purple-400"
-                      >
-                        Mark as Pending
-                      </button>
+                    </div>
+                    <div className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
+                      Completed
                     </div>
                   </div>
-                ))}
+                  <p className="text-white text-sm line-clamp-2 mb-3">
+                    {todo.task}
+                  </p>
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-700">
+                    <span className="text-xs text-gray-500">
+                      {new Date().toLocaleDateString()}
+                    </span>
+                    <button
+                      onClick={() => {
+                        handleUpdateTodoStatus(todo.id, "pending");
+                      }}
+                      className="text-xs font-medium text-purple-500 hover:text-purple-400"
+                    >
+                      Mark as Pending
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
