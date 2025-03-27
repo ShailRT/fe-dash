@@ -6,8 +6,10 @@ const SupDashboard = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [todos, setTodos] = useState([]);
   const [employees, setEmployees] = useState([]);
+  const [activeTab, setActiveTab] = useState("tasks");
   const { user, logout } = useUser();
   const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -59,218 +61,403 @@ const SupDashboard = () => {
 
   const handleCreateTodo = async (task, employee) => {
     try {
-      // Production URL
+      // Production URL/
       const response = await fetch("http://3.109.152.120:8000/apis/create-todo/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ title: task, assigned_to: employee }),
+        body: JSON.stringify({
+          task: task,
+          employee: parseInt(employee),
+        }),
       });
-      
-      // Localhost URL
-      // const response = await fetch("http://127.0.0.1:8000/apis/create-todo/", {
-      //   method: "POST",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({ title: task, assigned_to: employee }),
-      // });
 
       if (!response.ok) {
-        throw new Error(response.statusText);
+        const errorData = await response.json().catch(() => null);
+        console.error("Server error response:", errorData);
+        throw new Error(`Error creating task: ${response.status} ${response.statusText}`);
       }
 
       const data = await response.json();
-      console.log("successful:", data);
-      setTodos([...todos, data.todo]);
+      console.log("Task created successfully:", data);
+      
+      // Refresh todos after creating new task
+      try {
+        const todosResponse = await fetch("http://3.109.152.120:8000/apis/todos/");
+        const todosData = await todosResponse.json();
+        setTodos(todosData);
+      } catch (error) {
+        console.error("Error refreshing todos:", error);
+      }
     } catch (error) {
-      console.error("There was a problem with the request:", error);
+      console.error("Error creating task:", error);
+      alert("Failed to create task. Please try again.");
+    }
+  };
+
+  const handleUpdateTodoStatus = async (todoId, newStatus) => {
+    try {
+      const response = await fetch(`http://3.109.152.120:8000/apis/update-todo-status/${todoId}/`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          status: newStatus
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error("Server error response:", errorData);
+        throw new Error(`Error updating task: ${response.status}`);
+      }
+
+      // Refresh todos after updating status
+      const todosResponse = await fetch("http://3.109.152.120:8000/apis/todos/");
+      const todosData = await todosResponse.json();
+      setTodos(todosData);
+    } catch (error) {
+      console.error("Error updating todo status:", error);
+      alert("Failed to update task status. Please try again.");
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <nav className="bg-white shadow-lg border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
-            <div className="flex">
-              <div className="flex-shrink-0 flex items-center">
-                <h1 className="text-2xl font-bold text-purple-600">TaskMaster</h1>
-              </div>
+    <div className="min-h-screen bg-[#1a1c1e] flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-[#24262b] border-r border-gray-800">
+        <div className="p-4">
+          <div className="flex items-center space-x-3 mb-8">
+            <div className="h-12 w-12 rounded-full bg-purple-500 flex items-center justify-center">
+              <img
+                className="h-12 w-12 rounded-full"
+                src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg"
+                alt="User"
+              />
             </div>
-            <div className="flex items-center">
-            <div className="relative">
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={toggleDropdown}
-                    className="text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-purple-500 transition-colors duration-200"
-                  >
-                    <img
-                      className="h-10 w-10 rounded-full ring-2 ring-purple-500"
-                      src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg"
-                      alt="User"
-                    />
-                  </button>
-                    <span className="text-sm font-medium text-gray-700">
-                      {user.username}
-                    </span>
-                </div>
-                {dropdownOpen && (
-                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white transform transition-all duration-200 ease-in-out border border-gray-200">
-                    <button
-                      onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-purple-600 transition-colors duration-200"
-                    >
-                      Logout
-                    </button>
-                  </div>
-                )}
-              </div>
+            <div>
+              <h2 className="text-lg font-semibold text-white">{user.username}</h2>
+              <p className="text-sm text-gray-400">{user.user_type}</p>
             </div>
           </div>
+          <nav className="space-y-2">
+            <a 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab("tasks");
+              }}
+              className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg ${
+                activeTab === "tasks" 
+                  ? "bg-purple-500/10 text-purple-500" 
+                  : "text-gray-400 hover:bg-gray-800 hover:text-white"
+              }`}
+            >
+              <svg className="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+              All Tasks
+            </a>
+            <a 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab("members");
+              }}
+              className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg ${
+                activeTab === "members" 
+                  ? "bg-purple-500/10 text-purple-500" 
+                  : "text-gray-400 hover:bg-gray-800 hover:text-white"
+              }`}
+            >
+              <svg className="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+              Team Members
+            </a>
+            <a 
+              href="#" 
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveTab("completed");
+              }}
+              className={`flex items-center px-3 py-2.5 text-sm font-medium rounded-lg ${
+                activeTab === "completed" 
+                  ? "bg-purple-500/10 text-purple-500" 
+                  : "text-gray-400 hover:bg-gray-800 hover:text-white"
+              }`}
+            >
+              <svg className="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              Completed
+            </a>
+            <button
+              onClick={handleLogout}
+              className="flex w-full items-center px-3 py-2.5 text-sm font-medium rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white mt-4"
+            >
+              <svg className="mr-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Sign Out
+            </button>
+          </nav>
         </div>
-      </nav>
-      <main className="py-8">
-        <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200">
-              <div className="px-6 py-5 border-b border-gray-200">
-                <h3 className="text-2xl font-bold text-gray-900">Team Members</h3>
-              </div>
-              <div className="divide-y divide-gray-200">
-                {employees.map((employee, index) => (
-                  <div key={index} className="px-6 py-4 hover:bg-gray-50 transition-colors duration-200">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-10 w-10 rounded-full bg-purple-500 flex items-center justify-center">
-                        <span className="text-white font-medium">{employee.username[0].toUpperCase()}</span>
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900">{employee.username}</h4>
-                        <p className="text-sm text-gray-500">{employee.user_type}</p>
-                      </div>
-                    </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <div className="p-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-2xl font-bold text-white">
+                {activeTab === "tasks" && "All Tasks"}
+                {activeTab === "members" && "Team Members"}
+                {activeTab === "completed" && "Completed Tasks"}
+              </h1>
+              <p className="text-sm text-gray-400 mt-1">
+                {activeTab === "tasks" && (
+                  <div className="flex items-center space-x-4">
+                    <span>Total: {todos.length}</span>
+                    <span className="text-yellow-500">{todos.filter(todo => todo.status === "pending").length} Pending</span>
+                    <span className="text-green-500">{todos.filter(todo => todo.status === "completed").length} Completed</span>
                   </div>
-                ))}
-              </div>
+                )}
+                {activeTab === "members" && "View and manage team members"}
+                {activeTab === "completed" && "View completed tasks"}
+              </p>
             </div>
+            {activeTab === "tasks" && (
+              <button
+                onClick={() => setIsModalOpen(true)}
+                className="inline-flex items-center px-4 py-2 bg-purple-500 text-white text-sm font-medium rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Add New Task
+              </button>
+            )}
+          </div>
 
-            <div className="bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200">
-              <div className="px-6 py-5 border-b border-gray-200">
-                <h3 className="text-2xl font-bold text-gray-900">Task Management</h3>
-              </div>
-              
-              <div className="p-6">
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const task = e.target.todo.value;
-                    const employee = e.target.employee.value;
-                    handleCreateTodo(task, employee);
-                    e.target.todo.value = "";
-                    e.target.employee.value = "";
-                  }}
-                  className="space-y-6 bg-gray-50 p-6 rounded-lg shadow-sm border border-gray-200"
-                >
-                  <div className="space-y-4">
-                    <div>
-                      <label htmlFor="todo" className="block text-sm font-medium text-gray-700 mb-2">
-                        Task Description
-                      </label>
-                      <input
-                        type="text"
-                        id="todo"
-                        name="todo"
-                        className="shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border border-gray-300 rounded-md px-4 py-2 placeholder-gray-400 bg-white text-gray-900 transition-colors duration-200"
-                        placeholder="Enter new task..."
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label htmlFor="employee" className="block text-sm font-medium text-gray-700 mb-2">
-                        Assign To
-                      </label>
-                      <select
-                        id="employee"
-                        name="employee"
-                        className="shadow-sm focus:ring-2 focus:ring-purple-500 focus:border-purple-500 block w-full sm:text-sm border border-gray-300 rounded-md px-4 py-2 bg-white text-gray-900 transition-colors duration-200"
-                        required
-                      >
-                        <option value="">Select team member...</option>
-                        {employees.map((employee, index) => (
-                          employee.user_type === "employee" && <option key={index} value={employee.id}>
-                            {employee.username}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex justify-end">
-                      <button
-                        type="submit"
-                        className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200 ease-in-out transform hover:scale-105"
-                      >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                        </svg>
-                        Add Task
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-
-              <div className="px-6 py-4 bg-white border-t border-gray-200">
-                <div className="flex items-center justify-between mb-6">
-                  <h4 className="text-lg font-medium text-gray-900">Team Task Notes</h4>
-                  <div className="flex items-center space-x-3">
-                    <span className="text-xs text-gray-500">Total: {todos.length}</span>
-                    <span className="text-xs text-green-600">Completed: {todos.filter(todo => todo.status === "Completed").length}</span>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {activeTab === "tasks" && (
+            <div className="w-full">
+              {/* Tasks Section */}
+              <div className="overflow-hidden">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {todos.map((todo, index) => (
                     <div
                       key={index}
-                      className="group relative bg-gray-50 p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 border border-gray-200 hover:border-purple-500"
+                      className="bg-[#24262b] rounded-lg p-4 border border-gray-800 hover:border-purple-500/50 transition-all duration-200"
                     >
-                      <div className="absolute top-0 right-0 w-8 h-8 bg-purple-100 rounded-bl-lg rounded-tr-lg flex items-center justify-center">
-                        <div className={`h-2 w-2 rounded-full ${
-                          todo.status === "Completed" ? "bg-green-500" : "bg-yellow-500"
-                        }`} />
-                      </div>
-                      <div className="space-y-3">
-                        <div className="text-sm font-medium text-gray-900 line-clamp-2">
-                          {todo.task}
-                        </div>
-                        <div className="flex items-center justify-between pt-2 border-t border-gray-200">
-                          <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-purple-100 text-purple-700">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-3">
+                          <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+                            <span className="text-sm font-medium text-purple-500">
+                              {(employees.find((emp) => emp.id === todo.user_assigned_to)?.username || "?")[0].toUpperCase()}
+                            </span>
+                          </div>
+                          <span className="text-sm text-gray-400">
                             {employees.find((emp) => emp.id === todo.user_assigned_to)?.username || "Unassigned"}
                           </span>
-                          <button
-                            onClick={() => {
-                              const newTodos = [...todos];
-                              newTodos[index].status =
-                                newTodos[index].status === "Completed"
-                                  ? "Pending"
-                                  : "Completed";
-                              setTodos(newTodos);
-                            }}
-                            className="opacity-0 group-hover:opacity-100 px-2 py-1 text-xs font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-all duration-200"
-                          >
-                            {todo.status === "Completed" ? "Undo" : "Complete"}
-                          </button>
                         </div>
+                        <div className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          todo.status === "completed" 
+                            ? "bg-green-500/10 text-green-500" 
+                            : "bg-yellow-500/10 text-yellow-500"
+                        }`}>
+                          {todo.status === "completed" ? "Completed" : "Pending"}
+                        </div>
+                      </div>
+                      <p className="text-white text-sm line-clamp-2 mb-3">
+                        {todo.task}
+                      </p>
+                      <div className="flex items-center justify-between pt-3 border-t border-gray-700">
+                        <span className="text-xs text-gray-500">
+                          {new Date().toLocaleDateString()}
+                        </span>
+                        <button
+                          onClick={() => {
+                            handleUpdateTodoStatus(todo.id, todo.status === "completed" ? "pending" : "completed");
+                          }}
+                          className="text-xs font-medium text-purple-500 hover:text-purple-400"
+                        >
+                          {todo.status === "completed" ? "Mark as Pending" : "Mark as Complete"}
+                        </button>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-          </div>
+          )}
+
+          {activeTab === "members" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {employees.map((employee, index) => (
+                employee.user_type === "employee" && (
+                  <div key={index} className="bg-[#24262b] rounded-lg border border-gray-800 p-6">
+                    <div className="flex items-center space-x-4">
+                      <div className="h-16 w-16 rounded-full bg-purple-500/10 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xl font-medium text-purple-500">
+                          {employee.username[0].toUpperCase()}
+                        </span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-lg font-medium text-white truncate">{employee.username}</h3>
+                        <p className="text-sm text-gray-400">{employee.user_type}</p>
+                      </div>
+                    </div>
+                    <div className="mt-6 grid grid-cols-2 gap-4">
+                      <div className="bg-gray-800/50 rounded-lg p-4">
+                        <div className="text-2xl font-semibold text-purple-500">
+                          {todos.filter(todo => todo.user_assigned_to === employee.id).length}
+                        </div>
+                        <div className="text-sm text-gray-400">Assigned Tasks</div>
+                      </div>
+                      <div className="bg-gray-800/50 rounded-lg p-4">
+                        <div className="text-2xl font-semibold text-green-500">
+                          {todos.filter(todo => todo.user_assigned_to === employee.id && todo.status === "completed").length}
+                        </div>
+                        <div className="text-sm text-gray-400">Completed</div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              ))}
+            </div>
+          )}
+
+          {activeTab === "completed" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {todos
+                .filter(todo => todo.status === "completed")
+                .map((todo, index) => (
+                  <div
+                    key={index}
+                    className="bg-[#24262b] rounded-lg p-4 border border-gray-800"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-3">
+                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+                          <span className="text-sm font-medium text-purple-500">
+                            {(employees.find((emp) => emp.id === todo.user_assigned_to)?.username || "?")[0].toUpperCase()}
+                          </span>
+                        </div>
+                        <span className="text-sm text-gray-400">
+                          {employees.find((emp) => emp.id === todo.user_assigned_to)?.username || "Unassigned"}
+                        </span>
+                      </div>
+                      <div className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
+                        Completed
+                      </div>
+                    </div>
+                    <p className="text-white text-sm line-clamp-2 mb-3">
+                      {todo.task}
+                    </p>
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-700">
+                      <span className="text-xs text-gray-500">
+                        {new Date().toLocaleDateString()}
+                      </span>
+                      <button
+                        onClick={() => {
+                          handleUpdateTodoStatus(todo.id, "pending");
+                        }}
+                        className="text-xs font-medium text-purple-500 hover:text-purple-400"
+                      >
+                        Mark as Pending
+                      </button>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          )}
+
+          {/* Add Task Modal */}
+          {isModalOpen && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+              <div className="bg-[#24262b] rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
+                  <h3 className="text-lg font-medium text-white">Create New Task</h3>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="text-gray-400 hover:text-gray-300"
+                  >
+                    <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const task = e.target.todo.value;
+                    const employee = e.target.employee.value;
+                    handleCreateTodo(task, employee);
+                    setIsModalOpen(false);
+                    e.target.reset();
+                  }}
+                  className="p-6 space-y-6"
+                >
+                  <div>
+                    <label htmlFor="todo" className="block text-sm font-medium text-gray-300 mb-2">
+                      Task Description
+                    </label>
+                    <input
+                      type="text"
+                      id="todo"
+                      name="todo"
+                      className="bg-gray-900 block w-full rounded-lg border-gray-700 text-white text-sm focus:border-purple-500 focus:ring-purple-500"
+                      placeholder="Enter new task..."
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="employee" className="block text-sm font-medium text-gray-300 mb-2">
+                      Assign To
+                    </label>
+                    <select
+                      id="employee"
+                      name="employee"
+                      className="bg-gray-900 block w-full rounded-lg border-gray-700 text-white text-sm focus:border-purple-500 focus:ring-purple-500"
+                      required
+                    >
+                      <option value="">Select team member...</option>
+                      {employees.map((employee, index) => (
+                        employee.user_type === "employee" && (
+                          <option key={index} value={employee.id}>
+                            {employee.username}
+                          </option>
+                        )
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-gray-800 rounded-lg border border-gray-700 hover:bg-gray-700"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 text-sm font-medium text-white bg-purple-500 rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                    >
+                      Create Task
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
         </div>
-      </main>
+      </div>
     </div>
   );
 };
