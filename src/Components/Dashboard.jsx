@@ -100,20 +100,24 @@ const Dashboard = () => {
               </div>
             </div>
             <div className="flex items-center">
-              <div className="relative">
-                <button
-                  onClick={toggleDropdown}
-                  className="flex items-center space-x-3 text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-purple-500 transition-colors duration-200"
-                >
-                  <img
-                    className="h-10 w-10 rounded-full ring-2 ring-purple-500"
-                    src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg"
-                    alt="User"
-                  />
-                  <span className="text-sm font-medium text-gray-700">{user.username}</span>
-                </button>
+            <div className="relative">
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={toggleDropdown}
+                    className="text-sm border-2 border-transparent rounded-full focus:outline-none focus:border-purple-500 transition-colors duration-200"
+                  >
+                    <img
+                      className="h-10 w-10 rounded-full ring-2 ring-purple-500"
+                      src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg"
+                      alt="User"
+                    />
+                  </button>
+                    <span className="text-sm font-medium text-gray-700">
+                      {user.username}
+                    </span>
+                </div>
                 {dropdownOpen && (
-                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 transform transition-all duration-200 ease-in-out border border-gray-200">
+                  <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white transform transition-all duration-200 ease-in-out border border-gray-200">
                     <button
                       onClick={handleLogout}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-purple-600 transition-colors duration-200"
