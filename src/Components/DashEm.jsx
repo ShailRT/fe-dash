@@ -11,22 +11,23 @@ const DashEm = () => {
   useEffect(() => {
     if (!user) {
       navigate("/login");
-    } else {
-      console.log("user", user);
+      return;
     }
+
     const fetchTodos = async () => {
       try {
         const response = await fetch("http://3.109.152.120:8000/apis/todos/");
         const data = await response.json();
-        setTodos(data);
-        console.log("Todos:", data);
+        // Filter todos for the current employee
+        const employeeTodos = data.filter(todo => todo.user_assigned_to === user.user.id);
+        setTodos(employeeTodos);
       } catch (error) {
         console.error("Error fetching todos:", error);
       }
     };
 
     fetchTodos();
-  }, []);
+  }, [user, navigate]);
 
   const handleLogout = () => {
     logout();
@@ -54,15 +55,23 @@ const DashEm = () => {
       // Refresh todos after updating status
       const todosResponse = await fetch("http://3.109.152.120:8000/apis/todos/");
       const todosData = await todosResponse.json();
-      setTodos(todosData);
+      // Filter todos for the current employee
+      const employeeTodos = todosData.filter(todo => todo.user_assigned_to === user.user.id);
+      setTodos(employeeTodos);
     } catch (error) {
       console.error("Error updating todo status:", error);
       alert("Failed to update task status. Please try again.");
     }
   };
 
-  // Filter todos for the current employee
-  const myTodos = todos.filter(todo => todo.user_assigned_to === user.id);
+  // Filter todos based on active tab
+  const filteredTodos = activeTab === "tasks" 
+    ? todos.filter(todo => todo.status === "pending")
+    : todos.filter(todo => todo.status === "completed");
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#1a1c1e] flex">
@@ -71,15 +80,15 @@ const DashEm = () => {
         <div className="p-4">
           <div className="flex items-center space-x-3 mb-8">
             <div className="h-12 w-12 rounded-full bg-purple-500 flex items-center justify-center">
-              <img
-                className="h-12 w-12 rounded-full"
-                src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg"
-                alt="User"
-              />
+              <span className="text-lg font-semibold text-white">
+                {user?.user?.first_name?.[0]?.toUpperCase() || user?.user?.username?.[0]?.toUpperCase()}
+              </span>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">{user.username}</h2>
-              <p className="text-sm text-gray-400">{user.user_type}</p>
+              <h2 className="text-lg font-semibold text-white">
+                {user?.user?.first_name} {user?.user?.last_name}
+              </h2>
+              <p className="text-sm text-gray-400">{user?.user?.user_type}</p>
             </div>
           </div>
           <nav className="space-y-2">
@@ -140,16 +149,15 @@ const DashEm = () => {
                 {activeTab === "tasks" && "My Tasks"}
                 {activeTab === "completed" && "Completed Tasks"}
               </h1>
-              <p className="text-sm text-gray-400 mt-1">
-                {activeTab === "tasks" && (
-                  <div className="flex items-center space-x-4">
-                    <span>Total: {myTodos.length}</span>
-                    <span className="text-yellow-500">{myTodos.filter(todo => todo.status === "pending").length} Pending</span>
-                    <span className="text-green-500">{myTodos.filter(todo => todo.status === "completed").length} Completed</span>
-                  </div>
-                )}
-                {activeTab === "completed" && "View your completed tasks"}
-              </p>
+              {activeTab === "tasks" ? (
+                <div className="flex items-center space-x-4 mt-1">
+                  <span className="text-sm text-gray-400">Total: {todos.length}</span>
+                  <span className="text-sm text-yellow-500">{todos.filter(todo => todo.status === "pending").length} Pending</span>
+                  <span className="text-sm text-green-500">{todos.filter(todo => todo.status === "completed").length} Completed</span>
+                </div>
+              ) : (
+                <p className="text-sm text-gray-400 mt-1">View your completed tasks</p>
+              )}
             </div>
           </div>
 
@@ -158,7 +166,7 @@ const DashEm = () => {
               {/* Tasks Section */}
               <div className="overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {myTodos.map((todo, index) => (
+                  {filteredTodos.map((todo, index) => (
                     <div
                       key={index}
                       className="bg-[#24262b] rounded-lg p-4 border border-gray-800 hover:border-purple-500/50 transition-all duration-200"
@@ -167,11 +175,11 @@ const DashEm = () => {
                         <div className="flex items-center space-x-3">
                           <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
                             <span className="text-sm font-medium text-purple-500">
-                              {user.username[0].toUpperCase()}
+                              {user?.user?.first_name?.[0]?.toUpperCase() || user?.user?.username?.[0]?.toUpperCase()}
                             </span>
                           </div>
                           <span className="text-sm text-gray-400">
-                            {user.username}
+                            {user?.user?.first_name} {user?.user?.last_name}
                           </span>
                         </div>
                         <div className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -207,46 +215,44 @@ const DashEm = () => {
 
           {activeTab === "completed" && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {myTodos
-                .filter(todo => todo.status === "completed")
-                .map((todo, index) => (
-                  <div
-                    key={index}
-                    className="bg-[#24262b] rounded-lg p-4 border border-gray-800"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
-                          <span className="text-sm font-medium text-purple-500">
-                            {user.username[0].toUpperCase()}
-                          </span>
-                        </div>
-                        <span className="text-sm text-gray-400">
-                          {user.username}
+              {filteredTodos.map((todo, index) => (
+                <div
+                  key={index}
+                  className="bg-[#24262b] rounded-lg p-4 border border-gray-800"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+                        <span className="text-sm font-medium text-purple-500">
+                          {user?.user?.first_name?.[0]?.toUpperCase() || user?.user?.username?.[0]?.toUpperCase()}
                         </span>
                       </div>
-                      <div className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
-                        Completed
-                      </div>
-                    </div>
-                    <p className="text-white text-sm line-clamp-2 mb-3">
-                      {todo.task}
-                    </p>
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-700">
-                      <span className="text-xs text-gray-500">
-                        {new Date().toLocaleDateString()}
+                      <span className="text-sm text-gray-400">
+                        {user?.user?.first_name} {user?.user?.last_name}
                       </span>
-                      <button
-                        onClick={() => {
-                          handleUpdateTodoStatus(todo.id, "pending");
-                        }}
-                        className="text-xs font-medium text-purple-500 hover:text-purple-400"
-                      >
-                        Mark as Pending
-                      </button>
+                    </div>
+                    <div className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/10 text-green-500">
+                      Completed
                     </div>
                   </div>
-                ))}
+                  <p className="text-white text-sm line-clamp-2 mb-3">
+                    {todo.task}
+                  </p>
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-700">
+                    <span className="text-xs text-gray-500">
+                      {new Date().toLocaleDateString()}
+                    </span>
+                    <button
+                      onClick={() => {
+                        handleUpdateTodoStatus(todo.id, "pending");
+                      }}
+                      className="text-xs font-medium text-purple-500 hover:text-purple-400"
+                    >
+                      Mark as Pending
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>

@@ -1,17 +1,35 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useUser } from "../context/UserContext";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 const Register = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [role, setRole] = useState("super");
-  const { login } = useUser();
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    first_name: "",
+    last_name: "",
+    password: "",
+    confirmPassword: "",
+    user_type: "employee",
+  });
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleRegister = async (e) => {
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
     try {
       const response = await fetch("http://3.109.152.120:8000/apis/register/", {
         method: "POST",
@@ -19,100 +37,180 @@ const Register = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          username,
-          password,
-          user_type: role,
+          username: formData.username,
+          email: formData.email,
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          password: formData.password,
+          user_type: formData.user_type,
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error(response.statusText);
+        throw new Error(data.message || "Registration failed");
+      }
+      if (formData.user_type === "employee") {
+        navigate(`/dashboard-employee/${data.user_id}`);
+      } else if (formData.user_type === "supervisor") {
+        navigate(`/dashboard-supervisor`);
+      }else {
+        navigate("/dashboard")
       }
 
-      const data = await response.json();
-      login(data.user);
-      console.log("Registration successful:", data);
-      if (data.user.user_type === "employee") {
-        navigate(`/dashboard-employee/${data.user.id}`);
-      } else {
-        navigate("/dashboard");
-      }
-    } catch (error) {
-      console.error(
-        "There was a problem with the registration request:",
-        error
-      );
+    } catch (err) {
+      setError(err.message || "Registration failed. Please try again.");
     }
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded shadow-md">
-        <h2 className="text-2xl font-bold text-center">Register</h2>
-        <form onSubmit={handleRegister} className="space-y-4">
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Username
-            </label>
-            <input
-              type="text"
-              id="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              required
-            />
+    <div className="min-h-screen bg-[#1a1c1e] flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-[#24262b] rounded-lg shadow-xl p-8 border border-gray-800">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-white mb-2">Create Account</h2>
+            <p className="text-gray-400">Join our task management system</p>
           </div>
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              required
-            />
-          </div>
-          <div>
-            <label
-              htmlFor="role"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Role
-            </label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
-              required
-            >
-              <option value="super">Super</option>
-              <option value="manager">Manager</option>
-              <option value="employee">Employee</option>
-            </select>
-          </div>
-          <div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-red-500 text-sm">{error}</p>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="first_name" className="block text-sm font-medium text-gray-300 mb-2">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  id="first_name"
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 bg-[#1a1c1e] border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                  placeholder="Enter first name"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="last_name" className="block text-sm font-medium text-gray-300 mb-2">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  id="last_name"
+                  name="last_name"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 bg-[#1a1c1e] border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                  placeholder="Enter last name"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2">
+                Username
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 bg-[#1a1c1e] border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                placeholder="Choose a username"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 bg-[#1a1c1e] border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                placeholder="Enter your email"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 bg-[#1a1c1e] border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                placeholder="Create a password"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-2">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                className="w-full px-4 py-3 bg-[#1a1c1e] border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                placeholder="Confirm your password"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="user_type" className="block text-sm font-medium text-gray-300 mb-2">
+                Account Type
+              </label>
+              <select
+                id="user_type"
+                name="user_type"
+                value={formData.user_type}
+                onChange={handleChange}
+                className="w-full px-4 py-3 bg-[#1a1c1e] border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white"
+              >
+                <option value="employee">Employee</option>
+                <option value="supervisor">Supervisor</option>
+              </select>
+            </div>
+
             <button
               type="submit"
-              className="w-full px-4 py-2 font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="w-full py-3 px-4 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-[#24262b]"
             >
-              Register
+              Create Account
             </button>
-          </div>
-          <p className="text-center text-sm text-gray-500">
-              Already have an account? <Link to="/">Login</Link>
+          </form>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-gray-400">
+              Already have an account?{" "}
+              <Link to="/login" className="text-purple-500 hover:text-purple-400 font-medium">
+                Sign in
+              </Link>
             </p>
-        </form>
+          </div>
+        </div>
       </div>
     </div>
   );
