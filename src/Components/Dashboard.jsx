@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useUser } from "../context/UserContext";
 import { useNavigate } from "react-router-dom";
+import { getTodo, getEmployees, createTodo, deleteTodo, updateTodoStatus } from "../apis/dashRequest";
 
 const Dashboard = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -10,6 +11,7 @@ const Dashboard = () => {
   const { user, logout } = useUser();
   const navigate = useNavigate();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   useEffect(() => {
     if (!user) {
@@ -19,8 +21,7 @@ const Dashboard = () => {
     }
     const fetchTodos = async () => {
       try {
-        const response = await fetch("http://3.109.152.120:8000/apis/todos/");
-        const data = await response.json();
+        const data = await getTodo();
         setTodos(data);
         console.log("Todos:", data);
       } catch (error) {
@@ -30,8 +31,7 @@ const Dashboard = () => {
 
     const fetchEmployees = async () => {
       try {
-        const response = await fetch("http://3.109.152.120:8000/apis/get-users/");
-        const data = await response.json();
+        const data = await getEmployees();
         setEmployees(data);
       } catch (error) {
         console.error("Error fetching employees:", error);
@@ -53,30 +53,9 @@ const Dashboard = () => {
 
   const handleCreateTodo = async (task, employee) => {
     try {
-      const response = await fetch("http://3.109.152.120:8000/apis/create-todo/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          task: task,
-          employee: parseInt(employee),
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        console.error("Server error response:", errorData);
-        throw new Error(`Error creating task: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log("Task created successfully:", data);
-      
-      // Refresh todos after creating new task
+      const data = await createTodo(task, employee);
       try {
-        const todosResponse = await fetch("http://3.109.152.120:8000/apis/todos/");
-        const todosData = await todosResponse.json();
+        const todosData = await getTodo();
         setTodos(todosData);
       } catch (error) {
         console.error("Error refreshing todos:", error);
@@ -89,29 +68,31 @@ const Dashboard = () => {
 
   const handleUpdateTodoStatus = async (todoId, newStatus) => {
     try {
-      const response = await fetch(`http://3.109.152.120:8000/apis/update-todo-status/${todoId}/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          status: newStatus
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        console.error("Server error response:", errorData);
-        throw new Error(`Error updating task: ${response.status}`);
-      }
+      const data = await updateTodoStatus(todoId, newStatus);
 
       // Refresh todos after updating status
-      const todosResponse = await fetch("http://3.109.152.120:8000/apis/todos/");
-      const todosData = await todosResponse.json();
+      const todosData = await getTodo();
       setTodos(todosData);
     } catch (error) {
       console.error("Error updating todo status:", error);
       alert("Failed to update task status. Please try again.");
+    }
+  };
+
+  const handleDeleteTodo = async (todoId) => {
+    if (!window.confirm("Are you sure you want to delete this task?")) {
+      return;
+    }
+
+    try {
+      const data = await deleteTodo(todoId);
+      // Refresh todos after deletion
+      const todosData = await getTodo();
+      // Filter todos for the current admin
+      setTodos(todosData);
+    } catch (error) {
+      console.error("Error deleting todo:", error);
+      alert("Failed to delete task. Please try again.");
     }
   };
 
@@ -122,21 +103,45 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-[#1a1c1e] flex">
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <div className="w-64 bg-[#24262b] border-r border-gray-800">
+      <div className={`fixed lg:static inset-y-0 left-0 z-30 w-64 bg-[#24262b] border-r border-gray-800 transform transition-transform duration-300 ease-in-out ${
+        isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+      } lg:translate-x-0`}>
         <div className="p-4">
-          <div className="flex items-center space-x-3 mb-8">
-            <div className="h-12 w-12 rounded-full bg-purple-500 flex items-center justify-center">
-              <img
-                className="h-12 w-12 rounded-full"
-                src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg"
-                alt="User"
-              />
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-3">
+              <div className="h-12 w-12 rounded-full bg-purple-500 flex items-center justify-center">
+                <img
+                  className="h-12 w-12 rounded-full"
+                  src="https://img.freepik.com/free-vector/blue-circle-with-white-user_78370-4707.jpg"
+                  alt="User"
+                />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-white">
+                  {user.user.username.length > 15
+                    ? user.user.username.substring(0, 15) + "..."
+                    : user.user.username}
+                </h2>
+                <p className="text-sm text-gray-400">{user.user.user_type}</p>
+              </div>
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-white">{user.user.username}</h2>
-              <p className="text-sm text-gray-400">{user.user.user_type}</p>
-            </div>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="lg:hidden text-gray-400 hover:text-white"
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
           <nav className="space-y-2">
             <a 
@@ -188,7 +193,19 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
-        <div className="p-8">
+        <div className="p-4 lg:p-8">
+          {/* Mobile Header */}
+          <div className="flex items-center justify-between mb-4 lg:hidden">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="text-gray-400 hover:text-white"
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <div>
@@ -226,6 +243,7 @@ const Dashboard = () => {
               <div className="overflow-hidden">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {filteredTodos.map((todo, index) => (
+                    
                     <div
                       key={index}
                       className="bg-[#24262b] rounded-lg p-4 border border-gray-800 hover:border-purple-500/50 transition-all duration-200"
@@ -256,14 +274,22 @@ const Dashboard = () => {
                         <span className="text-xs text-gray-500">
                           {new Date().toLocaleDateString()}
                         </span>
-                        <button
-                          onClick={() => {
-                            handleUpdateTodoStatus(todo.id, todo.status === "completed" ? "pending" : "completed");
-                          }}
-                          className="text-xs font-medium text-purple-500 hover:text-purple-400"
-                        >
-                          {todo.status === "completed" ? "Mark as Pending" : "Mark as Complete"}
-                        </button>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => {
+                              handleUpdateTodoStatus(todo.id, todo.status === "completed" ? "pending" : "completed");
+                            }}
+                            className="text-xs font-medium text-purple-500 hover:text-purple-400"
+                          >
+                            {todo.status === "completed" ? "Mark as Pending" : "Mark as Complete"}
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTodo(todo.id)}
+                            className="text-xs font-medium text-red-500 hover:text-red-400"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -317,13 +343,20 @@ const Dashboard = () => {
 
           {/* Add Task Modal */}
           {isModalOpen && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-              <div className="bg-[#24262b] rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-[#24262b] rounded-xl shadow-2xl max-w-md w-full mx-auto transform transition-all">
                 <div className="px-6 py-4 border-b border-gray-800 flex justify-between items-center">
-                  <h3 className="text-lg font-medium text-white">Create New Task</h3>
+                  <div className="flex items-center space-x-3">
+                    <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
+                      <svg className="h-4 w-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg font-medium text-white">Create New Task</h3>
+                  </div>
                   <button
                     onClick={() => setIsModalOpen(false)}
-                    className="text-gray-400 hover:text-gray-300"
+                    className="text-gray-400 hover:text-white transition-colors"
                   >
                     <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -345,49 +378,66 @@ const Dashboard = () => {
                     <label htmlFor="todo" className="block text-sm font-medium text-gray-300 mb-2">
                       Task Description
                     </label>
-                    <input
-                      type="text"
-                      id="todo"
-                      name="todo"
-                      className="bg-gray-900 block w-full rounded-lg border-gray-700 text-white text-sm focus:border-purple-500 focus:ring-purple-500"
-                      placeholder="Enter new task..."
-                      required
-                    />
+                    <div className="relative">
+                      <textarea
+                        id="todo"
+                        name="todo"
+                        rows="3"
+                        className="bg-gray-900 block w-full rounded-lg border-gray-700 text-white text-sm focus:border-purple-500 focus:ring-purple-500 placeholder-gray-500 resize-none pl-4 pr-4 py-3 transition-colors duration-200"
+                        placeholder="Enter task description..."
+                        required
+                      />
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
 
                   <div>
                     <label htmlFor="employee" className="block text-sm font-medium text-gray-300 mb-2">
                       Assign To
                     </label>
-                    <select
-                      id="employee"
-                      name="employee"
-                      className="bg-gray-900 block w-full rounded-lg border-gray-700 text-white text-sm focus:border-purple-500 focus:ring-purple-500"
-                      required
-                    >
-                      <option value="">Select team member...</option>
-                      {employees.map((employee, index) => (
-                        employee.user_type === "employee" && (
-                          <option key={index} value={employee.id}>
-                            {employee.username}
-                          </option>
-                        )
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <select
+                        id="employee"
+                        name="employee"
+                        className="bg-gray-900 block w-full rounded-lg border-gray-700 text-white text-sm focus:border-purple-500 focus:ring-purple-500 appearance-none pl-4 pr-10 py-3 transition-colors duration-200"
+                        required
+                      >
+                        <option value="" className="text-gray-500">Select team member...</option>
+                        {employees.map((employee, index) => (
+                          employee.user_type === "employee" && (
+                            <option key={index} value={employee.id} className="text-white">
+                              {employee.username}
+                            </option>
+                          )
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                        <svg className="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="flex justify-end space-x-3">
+                  <div className="flex justify-end space-x-3 pt-4 border-t border-gray-800">
                     <button
                       type="button"
                       onClick={() => setIsModalOpen(false)}
-                      className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-gray-800 rounded-lg border border-gray-700 hover:bg-gray-700"
+                      className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white bg-gray-800 rounded-lg border border-gray-700 hover:bg-gray-700 transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="px-4 py-2 text-sm font-medium text-white bg-purple-500 rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                      className="px-4 py-2 text-sm font-medium text-white bg-purple-500 rounded-lg hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors flex items-center"
                     >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
                       Create Task
                     </button>
                   </div>

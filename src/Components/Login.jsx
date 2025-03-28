@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useUser } from "../context/UserContext";
+import { loginUser } from "../apis/dashRequest";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -23,19 +24,7 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await fetch("http://3.109.152.120:8000/apis/login/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-      }
+      const data = await loginUser(formData);
 
       login(data);
       console.log("data", data);
