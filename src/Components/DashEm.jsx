@@ -199,12 +199,9 @@ const DashEm = () => {
                   </span>
                 </div>
               ) : activeTab === "pending" ? (
-                <div className="flex items-center space-x-4 mt-1">
-                  <span className="text-sm text-yellow-500">
-                    {todos.filter((todo) => todo.status === "pending").length}{" "}
-                    Pending Tasks
-                  </span>
-                </div>
+                <p className="text-sm text-gray-400 mt-1">
+                  View your completed tasks
+                </p>
               ) : (
                 <p className="text-sm text-gray-400 mt-1">
                   View your completed tasks
@@ -282,7 +279,7 @@ const DashEm = () => {
               {filteredTodos.map((todo, index) => (
                 <div
                   key={index}
-                  className="bg-[#24262b] rounded-lg p-4 border border-gray-800"
+                  className="bg-[#24262b] rounded-lg p-4 border border-gray-800 hover:border-purple-500/50 transition-all duration-200"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
@@ -325,7 +322,7 @@ const DashEm = () => {
               {filteredTodos.map((todo, index) => (
                 <div
                   key={index}
-                  className="bg-[#24262b] rounded-lg p-4 border border-gray-800 hover:border-yellow-500/50 transition-all duration-200"
+                  className="bg-[#24262b] rounded-lg p-4 border border-gray-800 hover:border-purple-500/50 transition-all duration-200"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">

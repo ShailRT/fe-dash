@@ -288,20 +288,7 @@ const Dashboard = () => {
                     </span>
                   </div>
                 )}
-                {activeTab === "pending" && (
-                <div className="flex items-center space-x-4 mt-1">
-                  <span className="text-sm text-yellow-500">
-                  {
-                        todos.filter(
-                          (todo) =>
-                            todo.status === "pending" &&
-                            teamMembers.includes(todo.user_assigned_to)
-                        ).length
-                      }{" "}
-                    Pending Tasks
-                  </span>
-                </div>
-              )}
+                {activeTab === "pending" && "View pending tasks"}
                 {activeTab === "completed" && "View completed tasks"}
                 {activeTab === "members" && `View Team Members`}
               </p>
@@ -408,7 +395,7 @@ const Dashboard = () => {
               {filteredTodos.map((todo, index) => (
                 <div
                   key={index}
-                  className="bg-[#24262b] rounded-lg p-4 border border-gray-800 hover:border-yellow-500/50 transition-all duration-200"
+                  className="bg-[#24262b] rounded-lg p-4 border border-gray-800 hover:border-purple-500/50 transition-all duration-200"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
@@ -462,7 +449,7 @@ const Dashboard = () => {
               {filteredTodos.map((todo, index) => (
                 <div
                   key={index}
-                  className="bg-[#24262b] rounded-lg p-4 border border-gray-800"
+                  className="bg-[#24262b] rounded-lg p-4 border border-gray-800 hover:border-purple-500/50 transition-all duration-200"
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center space-x-3">
