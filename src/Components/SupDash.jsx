@@ -15,10 +15,9 @@ import {
   changePassword,
   deleteUser,
   deleteTeam,
-  updateTeam
+  updateTeam,
 } from "../apis/dashRequest";
 import Sidenav from "./Sidenav";
-
 
 const SupDash = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -188,7 +187,6 @@ const SupDash = () => {
       alert("Failed to delete user. Please try again.");
     }
   };
-  
 
   // Filter todos based on active tab and sort in reverse order
   const filteredTodos =
@@ -245,8 +243,8 @@ const SupDash = () => {
       console.log("Team created:", teamdata);
 
       setIsCreateTeamModalOpen(false);
-      const data = await getTeams()
-      setTeams(data)
+      const data = await getTeams();
+      setTeams(data);
       setSelectedManagers([]);
       setSelectedEmployees([]);
       // Refresh employees list
@@ -285,7 +283,15 @@ const SupDash = () => {
     try {
       const data = await updateUserDetails(profileData, user.user.id);
       console.log("updated user details:", data);
-      login(data);
+      if (data.status === "success") {
+        login(data);
+      } else {
+        alert(data.message);
+      }
+      setProfileData({
+        username: user.user.username,
+        email: user.user.email || "",
+      });
       setIsProfileModalOpen(false);
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -302,19 +308,23 @@ const SupDash = () => {
       }
 
       const data = await changePassword(passwordData, user.user.id);
-      setIsPasswordModalOpen(false);
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-      alert("Password changed successfully!");
+      if (data.status === "success") {
+        alert("Password changed successfully!");
+        console.log("password changed:", data.message);
+        setIsPasswordModalOpen(false);
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      } else {
+        alert(data.message);
+      }
     } catch (error) {
       console.error("Error changing password:", error);
       alert("Failed to change password. Please try again.");
     }
   };
-  
 
   const handleDeleteTeam = async (teamId) => {
     try {
@@ -338,7 +348,7 @@ const SupDash = () => {
         employees: selectedEmployees.map((employee) => employee.user_id),
       };
       await updateTeam(teamToEdit.id, teamData);
-      
+
       // Refresh teams list
       const teamsData = await getTeams();
       setTeams(teamsData);
@@ -357,8 +367,12 @@ const SupDash = () => {
   const handleOpenEditTeam = (team) => {
     setTeamToEdit(team);
     // Initialize selected managers and employees with current team members
-    setSelectedManagers(team.managers.map(managerId => ({ user_id: managerId })));
-    setSelectedEmployees(team.members.map(employeeId => ({ user_id: employeeId })));
+    setSelectedManagers(
+      team.managers.map((managerId) => ({ user_id: managerId }))
+    );
+    setSelectedEmployees(
+      team.members.map((employeeId) => ({ user_id: employeeId }))
+    );
     setIsEditTeamModalOpen(true);
   };
 
@@ -622,28 +636,30 @@ const SupDash = () => {
                 <span className="text-sm text-gray-400 mt-1 block">
                   View team members
                 </span>
-                )}
-              </div>
+              )}
+            </div>
             <div className="flex space-x-3">
-              {activeTab==="members" && (<button
-                onClick={() => setIsCreateTeamModalOpen(true)}
-                className="inline-flex items-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
-              >
-                <svg
-                  className="w-5 h-5 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+              {activeTab === "members" && (
+                <button
+                  onClick={() => setIsCreateTeamModalOpen(true)}
+                  className="inline-flex items-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
-                  />
-                </svg>
-                Create Team
-              </button>)}
+                  <svg
+                    className="w-5 h-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    />
+                  </svg>
+                  Create Team
+                </button>
+              )}
               {activeTab === "tasks" && (
                 <button
                   onClick={() => setIsModalOpen(true)}
@@ -686,7 +702,7 @@ const SupDash = () => {
                                 (emp) => emp.id === todo.user_assigned_to
                               )?.username || "?")[0].toUpperCase()}
                             </span>
-        </div>
+                          </div>
                           <span className="text-sm text-gray-400">
                             {employees.find(
                               (emp) => emp.id === todo.user_assigned_to
@@ -757,7 +773,7 @@ const SupDash = () => {
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-medium text-white">
                           Team {index + 1}
-              </h3>
+                        </h3>
                         <div className="flex items-center space-x-2">
                           <div className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/10 text-blue-500">
                             {team.managers.length} Manager
@@ -803,8 +819,8 @@ const SupDash = () => {
                             </svg>
                           </button>
                         </div>
-            </div>
-            
+                      </div>
+
                       {/* Managers */}
                       <div className="mb-4">
                         <h4 className="text-sm font-medium text-gray-400 mb-2">
@@ -894,7 +910,7 @@ const SupDash = () => {
                           key={index}
                           className="bg-[#24262b] rounded-lg border border-gray-800 p-6"
                         >
-                  <div className="flex items-center justify-between">
+                          <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
                               <div className="h-16 w-16 rounded-full bg-blue-500/10 flex items-center justify-center flex-shrink-0">
                                 <span className="text-xl font-medium text-blue-500">
@@ -989,13 +1005,13 @@ const SupDash = () => {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <h3 className="text-lg font-medium text-white truncate">
-                      {employee.username}
+                                  {employee.username}
                                 </h3>
                                 <p className="text-sm text-gray-400">
                                   {employee.user_type}
                                 </p>
-                    </div>
-                  </div>
+                              </div>
+                            </div>
                             <div className="flex space-x-2">
                               <button
                                 onClick={() => {
@@ -1099,7 +1115,7 @@ const SupDash = () => {
                   </div>
                 </div>
               ))}
-          </div>
+            </div>
           )}
           {activeTab === "pending" && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1179,8 +1195,8 @@ const SupDash = () => {
                     </div>
                     <h3 className="text-lg font-medium text-white">
                       Create New Task
-              </h3>
-            </div>
+                    </h3>
+                  </div>
                   <button
                     onClick={() => setIsModalOpen(false)}
                     className="text-gray-400 hover:text-white transition-colors"
@@ -1200,17 +1216,17 @@ const SupDash = () => {
                     </svg>
                   </button>
                 </div>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const task = e.target.todo.value;
-                  const employee = e.target.employee.value;
-                  handleCreateTodo(task, employee);
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const task = e.target.todo.value;
+                    const employee = e.target.employee.value;
+                    handleCreateTodo(task, employee);
                     setIsModalOpen(false);
                     e.target.reset();
-                }}
+                  }}
                   className="p-6 space-y-6"
-              >
+                >
                   <div>
                     <label
                       htmlFor="todo"
@@ -1220,13 +1236,13 @@ const SupDash = () => {
                     </label>
                     <div className="relative">
                       <textarea
-                      id="todo"
-                      name="todo"
+                        id="todo"
+                        name="todo"
                         rows="3"
                         className="bg-gray-900 block w-full rounded-lg border-gray-700 text-white text-sm focus:border-purple-500 focus:ring-purple-500 placeholder-gray-500 resize-none pl-4 pr-4 py-3 transition-colors duration-200"
                         placeholder="Enter task description..."
-                      required
-                    />
+                        required
+                      />
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                         <svg
                           className="h-5 w-5 text-gray-500"
@@ -1253,28 +1269,33 @@ const SupDash = () => {
                       Assign To
                     </label>
                     <div className="relative">
-                    <select
-                      id="employee"
-                      name="employee"
+                      <select
+                        id="employee"
+                        name="employee"
                         className="bg-gray-900 block w-full rounded-lg border-gray-700 text-white text-sm focus:border-purple-500 focus:ring-purple-500 appearance-none pl-4 pr-10 py-3 transition-colors duration-200"
-                      required
-                    >
+                        required
+                      >
                         <option value="" className="text-gray-500">
                           Select team member...
                         </option>
-                        {employees.map(
-                          (employee, index) =>
-                            employee.user_type === "employee" && (
-                              <option
-                                key={index}
-                                value={employee.id}
-                                className="text-white"
-                              >
-                          {employee.username}
-                        </option>
-                            )
-                        )}
-                    </select>
+                        {employees.map((employee, index) => {
+                          if (employee.user_type === "super") return null;
+                          
+                          return (
+                            <option
+                              key={index}
+                              value={employee.id}
+                              className={`text-white ${
+                                employee.user_type === "manager" 
+                                  ? "font-semibold" 
+                                  : ""
+                              }`}
+                            >
+                              {employee.username} ({employee.user_type})
+                            </option>
+                          );
+                        })}
+                      </select>
                       <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                         <svg
                           className="h-5 w-5 text-gray-500"
@@ -1386,17 +1407,17 @@ const SupDash = () => {
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        />
-                      </svg>
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
                         Add Manager
-                    </button>
-                  </div>
+                      </button>
+                    </div>
                     {selectedManagers.map((manager, index) => (
                       <div
                         key={index}
@@ -1426,7 +1447,7 @@ const SupDash = () => {
                               </svg>
                             </button>
                           )}
-                </div>
+                        </div>
                         <div>
                           <label className="block text-sm font-medium text-gray-300 mb-2">
                             Select Manager
@@ -1455,14 +1476,14 @@ const SupDash = () => {
                                 )
                             )}
                           </select>
-            </div>
+                        </div>
                       </div>
                     ))}
                   </div>
 
                   {/* Employees Section */}
                   <div className="space-y-4">
-                  <div className="flex items-center justify-between">
+                    <div className="flex items-center justify-between">
                       <h4 className="text-lg font-medium text-white">
                         Employees
                       </h4>
@@ -1671,9 +1692,11 @@ const SupDash = () => {
                       <div className="h-10 w-10 rounded-full bg-purple-500/10 flex items-center justify-center">
                         <span className="text-lg font-medium text-purple-500">
                           {selectedUser.username[0].toUpperCase()}
-                      </span>
+                        </span>
                       </div>
-                      <span className="text-white">{selectedUser.username}</span>
+                      <span className="text-white">
+                        {selectedUser.username}
+                      </span>
                     </div>
                   </div>
 
@@ -1692,8 +1715,8 @@ const SupDash = () => {
                   </div>
 
                   <div className="flex justify-end space-x-3 pt-4 border-t border-gray-800">
-                      <button
-                        onClick={() => {
+                    <button
+                      onClick={() => {
                         setIsUpdateRoleModalOpen(false);
                         setSelectedUser(null);
                         setNewRole("");
@@ -1707,10 +1730,10 @@ const SupDash = () => {
                       className="px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors"
                     >
                       Update Role
-                      </button>
-                    </div>
+                    </button>
                   </div>
-                  </div>
+                </div>
+              </div>
             </div>
           )}
 
@@ -1720,7 +1743,9 @@ const SupDash = () => {
               <div className="bg-[#24262b] rounded-lg border border-gray-800 p-6">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-xl font-semibold text-white">Profile</h2>
+                    <h2 className="text-xl font-semibold text-white">
+                      Profile
+                    </h2>
                     <p className="text-sm text-gray-400 mt-1">
                       Manage your account settings
                     </p>
@@ -1764,8 +1789,8 @@ const SupDash = () => {
                       </svg>
                       Edit Profile
                     </button>
-          </div>
-        </div>
+                  </div>
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
@@ -1779,13 +1804,17 @@ const SupDash = () => {
                       <label className="block text-sm font-medium text-gray-400">
                         Email
                       </label>
-                      <p className="mt-1 text-white">{user.user.email || "Not set"}</p>
+                      <p className="mt-1 text-white">
+                        {user.user.email || "Not set"}
+                      </p>
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-400">
                         Role
                       </label>
-                      <p className="mt-1 text-white capitalize">{user.user.user_type}</p>
+                      <p className="mt-1 text-white capitalize">
+                        {user.user.user_type}
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-4">
@@ -1832,7 +1861,9 @@ const SupDash = () => {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-white">Edit Profile</h3>
+                    <h3 className="text-lg font-medium text-white">
+                      Edit Profile
+                    </h3>
                   </div>
                   <button
                     onClick={() => setIsProfileModalOpen(false)}
@@ -1866,7 +1897,10 @@ const SupDash = () => {
                       id="username"
                       value={profileData.username}
                       onChange={(e) =>
-                        setProfileData({ ...profileData, username: e.target.value })
+                        setProfileData({
+                          ...profileData,
+                          username: e.target.value,
+                        })
                       }
                       className="bg-gray-900 block w-full rounded-lg border-gray-700 text-white text-sm focus:border-purple-500 focus:ring-purple-500 px-4 py-2.5"
                       required
@@ -1885,7 +1919,10 @@ const SupDash = () => {
                       id="email"
                       value={profileData.email}
                       onChange={(e) =>
-                        setProfileData({ ...profileData, email: e.target.value })
+                        setProfileData({
+                          ...profileData,
+                          email: e.target.value,
+                        })
                       }
                       className="bg-gray-900 block w-full rounded-lg border-gray-700 text-white text-sm focus:border-purple-500 focus:ring-purple-500 px-4 py-2.5"
                     />
@@ -1932,7 +1969,9 @@ const SupDash = () => {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-white">Change Password</h3>
+                    <h3 className="text-lg font-medium text-white">
+                      Change Password
+                    </h3>
                   </div>
                   <button
                     onClick={() => {
@@ -2075,7 +2114,9 @@ const SupDash = () => {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-white">Delete User</h3>
+                    <h3 className="text-lg font-medium text-white">
+                      Delete User
+                    </h3>
                   </div>
                   <button
                     onClick={() => {
@@ -2108,11 +2149,14 @@ const SupDash = () => {
                     </div>
                     <div>
                       <p className="text-white">{userToDelete.username}</p>
-                      <p className="text-sm text-gray-400 capitalize">{userToDelete.user_type}</p>
+                      <p className="text-sm text-gray-400 capitalize">
+                        {userToDelete.user_type}
+                      </p>
                     </div>
                   </div>
                   <p className="text-gray-300">
-                    Are you sure you want to delete this user? This action cannot be undone.
+                    Are you sure you want to delete this user? This action
+                    cannot be undone.
                   </p>
                   <div className="flex justify-end space-x-3 pt-4 border-t border-gray-800">
                     <button
@@ -2157,7 +2201,9 @@ const SupDash = () => {
                         />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-white">Delete Team</h3>
+                    <h3 className="text-lg font-medium text-white">
+                      Delete Team
+                    </h3>
                   </div>
                   <button
                     onClick={() => {
@@ -2184,12 +2230,19 @@ const SupDash = () => {
                 <div className="p-6 space-y-6">
                   <div className="space-y-4">
                     <div>
-                      <h4 className="text-sm font-medium text-gray-400 mb-2">Managers</h4>
+                      <h4 className="text-sm font-medium text-gray-400 mb-2">
+                        Managers
+                      </h4>
                       <div className="space-y-2">
                         {teamToDelete.managers.map((managerId, idx) => {
-                          const manager = managers.find((m) => m.id === managerId);
+                          const manager = managers.find(
+                            (m) => m.id === managerId
+                          );
                           return (
-                            <div key={idx} className="flex items-center space-x-3">
+                            <div
+                              key={idx}
+                              className="flex items-center space-x-3"
+                            >
                               <div className="h-8 w-8 rounded-full bg-blue-500/10 flex items-center justify-center">
                                 <span className="text-sm font-medium text-blue-500">
                                   {manager?.username?.[0]?.toUpperCase() || "?"}
@@ -2204,15 +2257,23 @@ const SupDash = () => {
                       </div>
                     </div>
                     <div>
-                      <h4 className="text-sm font-medium text-gray-400 mb-2">Employees</h4>
+                      <h4 className="text-sm font-medium text-gray-400 mb-2">
+                        Employees
+                      </h4>
                       <div className="space-y-2">
                         {teamToDelete.members.map((employeeId, idx) => {
-                          const employee = employees.find((e) => e.id === employeeId);
+                          const employee = employees.find(
+                            (e) => e.id === employeeId
+                          );
                           return (
-                            <div key={idx} className="flex items-center space-x-3">
+                            <div
+                              key={idx}
+                              className="flex items-center space-x-3"
+                            >
                               <div className="h-8 w-8 rounded-full bg-purple-500/10 flex items-center justify-center">
                                 <span className="text-sm font-medium text-purple-500">
-                                  {employee?.username?.[0]?.toUpperCase() || "?"}
+                                  {employee?.username?.[0]?.toUpperCase() ||
+                                    "?"}
                                 </span>
                               </div>
                               <span className="text-sm text-gray-300">
@@ -2225,7 +2286,8 @@ const SupDash = () => {
                     </div>
                   </div>
                   <p className="text-gray-300">
-                    Are you sure you want to delete this team? This action cannot be undone.
+                    Are you sure you want to delete this team? This action
+                    cannot be undone.
                   </p>
                   <div className="flex justify-end space-x-3 pt-4 border-t border-gray-800">
                     <button

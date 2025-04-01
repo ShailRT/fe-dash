@@ -83,7 +83,15 @@ const DashEm = () => {
     try {
       const data = await updateUserDetails(profileData, user.user.id);
       console.log("updated user details:", data);
-      login(data);
+      if (data.status === "success") {
+        login(data);
+      } else {
+        alert(data.message);
+      }
+      setProfileData({
+        username: user.user.username,
+        email: user.user.email || "",
+      });
       setIsProfileModalOpen(false);
     } catch (error) {
       console.error("Error updating profile:", error);
@@ -100,13 +108,18 @@ const DashEm = () => {
       }
 
       const data = await changePassword(passwordData, user.user.id);
-      setIsPasswordModalOpen(false);
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-      alert("Password changed successfully!");
+      if (data.status === "success") {
+        alert("Password changed successfully!");
+        console.log("password changed:", data.message);
+        setIsPasswordModalOpen(false);
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      } else {
+        alert(data.message);
+      }
     } catch (error) {
       console.error("Error changing password:", error);
       alert("Failed to change password. Please try again.");
