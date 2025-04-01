@@ -6,6 +6,8 @@ import Dashboard from "./Components/Dashboard";
 import DashEm from "./Components/DashEm";
 import { UserProvider } from "./context/UserContext";
 import SupDashboard from "./Components/SupDash";
+import Tasks from "./Components/Tasks";
+import Completed from "./Components/Completed";
 
 function App() {
   return (
@@ -14,7 +16,12 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />}>
+          {/* <Route path="tasks" element={<Tasks />} />
+          <Route path="completed" element={<Completed />} /> */}
+
+          </Route>
+
           <Route path="/dashboard-supervisor" element={<SupDashboard />} />
           <Route path="/dashboard-employee/:id" element={<DashEm />} />
         </Routes>
