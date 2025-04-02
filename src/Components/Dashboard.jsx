@@ -14,6 +14,7 @@ import {
   changePassword,
 } from "../apis/dashRequest";
 import Sidenav from "./Sidenav";
+import DashHeader from "./DashHeader";
 
 const Dashboard = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -185,19 +186,20 @@ const Dashboard = () => {
   // Filter todos based on active tab and sort in reverse order
   const filteredTodos =
     activeTab === "tasks"
-      ? [...todos]
-          .filter(
-            (todo) =>
-              teamMembers.includes(todo.user_assigned_to) ||
-              todo.user_assigned_to === user.user.id // Include manager's own tasks
-          )
-          .reverse() // Show all tasks in reverse order
+      ? todos
+      .filter(
+        (todo) =>
+          
+          (teamMembers?.includes(todo.user_assigned_to) ||
+            todo.user_assigned_to === user.user.id) // Include manager's pending tasks
+      )
+      .reverse() // Show all tasks in reverse order
       : activeTab === "pending"
       ? todos
           .filter(
             (todo) =>
               todo.status === "pending" &&
-              (teamMembers.includes(todo.user_assigned_to) ||
+              (teamMembers?.includes(todo.user_assigned_to) ||
                 todo.user_assigned_to === user.user.id) // Include manager's pending tasks
           )
           .reverse()
@@ -205,7 +207,7 @@ const Dashboard = () => {
           .filter(
             (todo) =>
               todo.status === "completed" &&
-              (teamMembers.includes(todo.user_assigned_to) ||
+              (teamMembers?.includes(todo.user_assigned_to) ||
                 todo.user_assigned_to === user.user.id) // Include manager's completed tasks
           )
           .reverse();
@@ -236,6 +238,13 @@ const Dashboard = () => {
 
       <div className="flex-1 overflow-auto">
         <div className="p-4 lg:p-8">
+          {/* <DashHeader
+            setIsSidebarOpen={setIsSidebarOpen}
+            activeTab={activeTab}
+            todos={todos}
+            teamMembers={teamMembers}
+            setIsModalOpen={setIsModalOpen}
+          /> */}
           {/* Mobile Header */}
           <div className="flex items-center justify-between mb-4 lg:hidden">
             <button
@@ -275,7 +284,8 @@ const Dashboard = () => {
                       Total:{" "}
                       {
                         todos.filter((todo) =>
-                          teamMembers.includes(todo.user_assigned_to)
+                          teamMembers?.includes(todo.user_assigned_to) || 
+                        todo.user_assigned_to === user.user.id
                         ).length
                       }
                     </span>
@@ -284,7 +294,8 @@ const Dashboard = () => {
                         todos.filter(
                           (todo) =>
                             todo.status === "pending" &&
-                            teamMembers.includes(todo.user_assigned_to)
+                            (teamMembers?.includes(todo.user_assigned_to) ||
+                              todo.user_assigned_to === user.user.id)
                         ).length
                       }{" "}
                       Pending
@@ -294,7 +305,8 @@ const Dashboard = () => {
                         todos.filter(
                           (todo) =>
                             todo.status === "completed" &&
-                            teamMembers.includes(todo.user_assigned_to)
+                            (teamMembers?.includes(todo.user_assigned_to) ||
+                              todo.user_assigned_to === user.user.id)
                         ).length
                       }{" "}
                       Completed
