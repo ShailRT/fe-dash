@@ -400,6 +400,7 @@ const SupDash = () => {
             pendingCount={pendingCount}
             completedCount={completedCount}
             activeTab={activeTab}
+            setIsModalOpen={setIsModalOpen}
           />
 
           {activeTab === "tasks" && (
