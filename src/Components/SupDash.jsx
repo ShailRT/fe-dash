@@ -411,7 +411,7 @@ const SupDash = () => {
                     <TodoCard
                       index={index}
                       todo={todo}
-                      user={user}
+                      user={employees.find(emp => emp.id === todo.user_assigned_to) || user}
                       handleUpdateTodoStatus={handleUpdateTodoStatus}
                       handleDeleteTodo={handleDeleteTodo}
                     />
@@ -734,11 +734,11 @@ const SupDash = () => {
           )}
 
           {activeTab === "completed" && (
-            <CompletedTodo filteredTodos={filteredTodos} user={user} handleUpdateTodoStatus={handleUpdateTodoStatus} handleDeleteTodo={handleDeleteTodo} />
+            <CompletedTodo filteredTodos={filteredTodos} employees={employees} handleUpdateTodoStatus={handleUpdateTodoStatus} handleDeleteTodo={handleDeleteTodo} />
             
           )}
           {activeTab === "pending" && (
-            <PendingTodo filteredTodos={filteredTodos} user={user} handleUpdateTodoStatus={handleUpdateTodoStatus} handleDeleteTodo={handleDeleteTodo} />
+            <PendingTodo filteredTodos={filteredTodos} employees={employees} handleUpdateTodoStatus={handleUpdateTodoStatus} handleDeleteTodo={handleDeleteTodo} />
             // <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             //   {filteredTodos.map((todo, index) => (
             //     <div

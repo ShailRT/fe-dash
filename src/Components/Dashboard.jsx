@@ -53,6 +53,7 @@ const Dashboard = () => {
       try {
         const data = await getEmployees();
         setEmployees(data);
+        console.log("Employees:", data);
       } catch (error) {
         console.error("Error fetching employees:", error);
       }
@@ -212,7 +213,7 @@ const Dashboard = () => {
                     <TodoCard
                       key={index}
                       todo={todo}
-                      user={user}
+                      user={employees.find(emp => emp.id === todo.user_assigned_to) || user}
                       handleUpdateTodoStatus={handleUpdateTodoStatus}
                       handleDeleteTodo={handleDeleteTodo}
                     />
@@ -224,7 +225,7 @@ const Dashboard = () => {
           {activeTab === "pending" && (
             <PendingTodo
               filteredTodos={filteredTodos}
-              user={user}
+              employees={employees}
               handleUpdateTodoStatus={handleUpdateTodoStatus}
               handleDeleteTodo={handleDeleteTodo}
             />
@@ -232,7 +233,7 @@ const Dashboard = () => {
           {activeTab === "completed" && (
             <CompletedTodo
               filteredTodos={filteredTodos}
-              user={user}
+              employees={employees}
               handleUpdateTodoStatus={handleUpdateTodoStatus}
               handleDeleteTodo={handleDeleteTodo}
             />
