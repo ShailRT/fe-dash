@@ -1,5 +1,5 @@
-const BASE_URL = "http://3.109.152.120:8000/apis";
-// const BASE_URL = "http://localhost:8000/apis";
+// const BASE_URL = "http://3.109.152.120:8000/apis";
+const BASE_URL = "http://localhost:8000/apis";
 
 async function getTodo() {
   const response = await fetch(`${BASE_URL}/todos/`);

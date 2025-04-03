@@ -26,7 +26,7 @@ const Login = () => {
     try {
       const data = await loginUser(formData);
 
-      login(data);
+      login(data.user);
       console.log("data", data);
       console.log("data.user.user_type", data.user.user_type);
       if (data.user.user_type === "super") {

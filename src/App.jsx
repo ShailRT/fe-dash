@@ -6,8 +6,6 @@ import Dashboard from "./Components/Dashboard";
 import DashEm from "./Components/DashEm";
 import { UserProvider } from "./context/UserContext";
 import SupDashboard from "./Components/SupDash";
-import Tasks from "./Components/Tasks";
-import Completed from "./Components/Completed";
 
 function App() {
   return (

@@ -26,11 +26,11 @@ function Sidenav({
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white">
-                {user.user.username.length > 15
-                  ? user.user.username.substring(0, 15) + "..."
-                  : user.user.username}
+                {user?.username?.length > 15
+                  ? user?.username?.substring(0, 15) + "..."
+                  : user?.username}
               </h2>
-              <p className="text-sm text-gray-400">{user.user.user_type}</p>
+              <p className="text-sm text-gray-400">{user.user_type}</p>
             </div>
           </div>
           <button
@@ -134,7 +134,7 @@ function Sidenav({
             </svg>
             Completed
           </a>
-          {user.user.user_type !== "employee" && (
+          {user.user_type !== "employee" && (
             <a
               href="#"
               onClick={(e) => {
