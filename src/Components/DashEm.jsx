@@ -136,14 +136,14 @@ const DashEm = () => {
           {activeTab === "completed" && (
             <CompletedTodo
               filteredTodos={filteredTodos}
-              user={user}
+              employees={[user]}
               handleUpdateTodoStatus={handleUpdateTodoStatus}
             />
           )}
           {activeTab === "pending" && (
             <PendingTodo
               filteredTodos={filteredTodos}
-              user={user}
+              employees={[user]}
               handleUpdateTodoStatus={handleUpdateTodoStatus}
             />
           )}
